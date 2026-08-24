@@ -52,3 +52,19 @@ class AdminProductUpdateResponse(BaseModel):
 class AdminProductDeleteResponse(BaseModel):
     message: str
     product_id: int
+
+
+class PublicProductsResponse(BaseModel):
+    id: int
+    title: str
+    description: str
+    image_url: str | None
+    price: int
+    in_stock: bool
+    created_at: datetime
+
+
+class ProductsResponse(BaseModel):
+    message: str
+    products: list[PublicProductsResponse]
+    has_more: bool

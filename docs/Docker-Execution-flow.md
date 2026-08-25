@@ -501,3 +501,10 @@ FastAPI Application Running
 * Docker automatically creates an internal network for service communication.
 * `CMD` runs only after the container starts.
 * The FastAPI application becomes available only after all previous steps complete successfully.
+
+
+* RUN Scripts files using 
+<!-- to create fake products -->
+docker exec -it fastapi_app uv run python -m scripts.seed_products
+<!-- to convert normal user to admin -->
+docker exec -it fastapi_app uv run python -m scripts.provision_admin

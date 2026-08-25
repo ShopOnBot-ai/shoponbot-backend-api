@@ -55,6 +55,7 @@ class AdminProductDeleteResponse(BaseModel):
 
 
 class PublicProductsResponse(BaseModel):
+    model_config = ConfigDict(from_attributes= True)
     id: int
     title: str
     description: str
@@ -67,4 +68,6 @@ class PublicProductsResponse(BaseModel):
 class ProductsResponse(BaseModel):
     message: str
     products: list[PublicProductsResponse]
-    has_more: bool
+    hasMore: bool
+    page: int
+    limit: int

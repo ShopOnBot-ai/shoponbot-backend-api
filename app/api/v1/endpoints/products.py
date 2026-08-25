@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
 from app.models.products import Product
-from app.schemas.products import ProductsResponse
+from app.schemas.products import ProductsResponse, PublicProductsResponse
+from app.services.aws_service import generate_signed_url
 from app.utils.logger import logger
 
 router = APIRouter()
@@ -41,10 +42,27 @@ async def get_all_products(
                 status_code=status.HTTP_404_NOT_FOUND, detail="No products found."
             )
 
+        response_products = []
+
+        for product in products:
+            response_products.append(
+                PublicProductsResponse(
+                    id=product.id,
+                    title=product.title,
+                    description=product.description,
+                    image_url=generate_signed_url(product.image_url),
+                    price=product.price,
+                    in_stock=product.in_stock,
+                    created_at=product.created_at,
+                )
+            )
+
         response = ProductsResponse(
             message="Fetched products successfully",
-            products=products,
-            has_more=has_more
+            products=response_products,
+            hasMore=has_more,
+            page=page,
+            limit=limit
         )
         return response
     except Exception:

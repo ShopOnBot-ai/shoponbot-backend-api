@@ -42,6 +42,9 @@ class AdminProductCreateResponse(BaseModel):
 class AdminProductsResponse(BaseModel):
     message: str
     products: list[ProductResponse]
+    page: int
+    limit: int
+    total_count: int
 
 
 class AdminProductUpdateResponse(BaseModel):

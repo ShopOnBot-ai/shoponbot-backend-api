@@ -72,7 +72,7 @@ async def get_all_products(
             limit=limit
         )
         response_json = response.model_dump_json()
-        await redis_client.set(cache_key, response_json, ex=300)
+        await redis_client.set(cache_key, response_json, ex=60)
         return response
     except Exception:
         logger.exception("Failed to fetch products")

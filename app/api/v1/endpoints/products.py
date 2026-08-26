@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.redis import build_product_cache_key, redis_client
 from app.db.database import get_db
 from app.models.products import Product
 from app.schemas.products import ProductsResponse, PublicProductsResponse
@@ -21,6 +22,12 @@ async def get_all_products(
     search: str | None = None,
 ):
     offset = (page - 1) * limit
+    cache_key = build_product_cache_key(page, limit, search)
+    cached_data = await redis_client.get(cache_key)
+
+    if cached_data is not None:
+        return ProductsResponse.model_validate_json(cached_data)
+
     query = select(Product)
     try:
         if search:
@@ -64,6 +71,8 @@ async def get_all_products(
             page=page,
             limit=limit
         )
+        response_json = response.model_dump_json()
+        await redis_client.set(cache_key, response_json, ex=300)
         return response
     except Exception:
         logger.exception("Failed to fetch products")

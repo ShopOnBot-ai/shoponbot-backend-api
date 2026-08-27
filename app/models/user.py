@@ -1,12 +1,15 @@
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
-from app.models.cart import Cart
+
+if TYPE_CHECKING:
+   from app.models.cart import Cart
 
 
 class UserRole(str, Enum):

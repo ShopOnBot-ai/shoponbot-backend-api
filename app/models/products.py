@@ -1,8 +1,12 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
-from app.models.cart_items import CartItem
+
+if TYPE_CHECKING:
+    from app.models.cart_items import CartItem
 
 
 class Product(Base):

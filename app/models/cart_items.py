@@ -1,9 +1,14 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
-from app.models.cart import Cart
-from app.models.products import Product
+
+if TYPE_CHECKING:
+    from app.models.cart import Cart
+    from app.models.products import Product
+    
 
 
 class CartItem(Base):

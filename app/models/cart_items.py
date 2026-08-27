@@ -21,10 +21,10 @@ class CartItem(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     cart_id: Mapped[int] = mapped_column(
-        ForeignKey(Cart.id), nullable=False, index=True
+        ForeignKey("carts.id"), nullable=False, index=True
     )
     product_id: Mapped[int] = mapped_column(
-        ForeignKey(Product.id), nullable=False, index=True
+        ForeignKey("products.id"), nullable=False, index=True
     )
     quantity: Mapped[int] = mapped_column(nullable=False)
     created_at: Mapped[DateTime] = mapped_column(

@@ -23,7 +23,7 @@ class Cart(Base):
         onupdate=func.now(),
         nullable=False,
     )
-    user_id: Mapped[int] = mapped_column(ForeignKey(User.id), nullable=False, index=True, unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True, unique=True)
 
     user: Mapped["User"] = relationship(
         back_populates="cart"

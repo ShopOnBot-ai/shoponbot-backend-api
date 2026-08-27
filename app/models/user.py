@@ -3,9 +3,10 @@ from enum import Enum
 
 from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
+from app.models.cart import Cart
 
 
 class UserRole(str, Enum):
@@ -39,6 +40,10 @@ class User(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
+    )
+
+    cart: Mapped["Cart"] = relationship(
+        back_populates="user"
     )
 
     @property

@@ -1,5 +1,5 @@
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, UniqueConstraint, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
 from app.models.cart import Cart
@@ -31,3 +31,12 @@ class CartItem(Base):
         onupdate=func.now(),
         nullable=False,
     )
+
+    cart: Mapped["Cart"] = relationship(
+        back_populates="items"
+    )
+    product: Mapped["Product"] = relationship(
+        back_populates="cart_items"
+    )
+
+

@@ -1,7 +1,8 @@
 from sqlalchemy import Boolean, DateTime, Integer, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
+from app.models.cart_items import CartItem
 
 
 class Product(Base):
@@ -19,4 +20,8 @@ class Product(Base):
     )
     updated_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False,
+    )
+
+    cart_items: Mapped[list["CartItem"]] = relationship(
+        back_populates="product"
     )

@@ -12,6 +12,7 @@ class CartRequest(BaseModel):
 
 class CartResponse(BaseModel):
     id: int
+    user_id: int
     items: list[CartItemResponse]
     created_at: datetime
     updated_at: datetime

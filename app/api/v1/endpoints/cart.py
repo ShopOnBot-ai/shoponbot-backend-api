@@ -11,7 +11,7 @@ from app.models.cart import Cart
 from app.models.cart_items import CartItem
 from app.models.products import Product
 from app.schemas.cart import CartRequest, CartResponse
-from app.schemas.cart_items import CartItemResponse
+from app.utils.helper import _prepare_cart_response
 from app.utils.logger import logger
 
 router = APIRouter()
@@ -88,6 +88,7 @@ async def cart(
                 quantity=requested_quantity,
             )
             db.add(cart_item)
+            await db.flush()
 
         result = await db.execute(
             select(Cart)
@@ -95,25 +96,7 @@ async def cart(
             .options(selectinload(Cart.items).selectinload(CartItem.product))
         )
         cart = result.scalar_one()
-        cart_items = []
-
-        for item in cart.items:
-            subtotal = item.product.price * item.quantity
-            cart_item_response = CartItemResponse(
-                id=item.id,
-                product_id=item.product_id,
-                quantity=item.quantity,
-                subtotal=subtotal,
-                product=item.product,
-            )
-            cart_items.append(cart_item_response)
-        return CartResponse(
-            id=cart.id,
-            user_id=cart.user_id,
-            items=cart_items,
-            created_at=cart.created_at,
-            updated_at=cart.updated_at,
-        )
+        return _prepare_cart_response(cart)
     except HTTPException:
         raise
     except Exception:
@@ -121,4 +104,42 @@ async def cart(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to add product to cart",
+        )
+
+
+@router.get("/", response_model=CartResponse)
+async def getCart(
+    current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        user_id = current_user.id
+
+        result = await db.execute(
+            select(Cart)
+            .where(Cart.user_id == user_id)
+            .options(selectinload(Cart.items).selectinload(CartItem.product))
+        )
+        cart = result.scalar_one_or_none()
+
+        if cart is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No cart found for this user",
+            )
+
+        logger.info(
+            "Cart data: id=%s, user_id=%s, created_at=%s, updated_at=%s",
+            cart.id,
+            cart.user_id,
+            cart.created_at,
+            cart.updated_at,
+        )
+        return _prepare_cart_response(cart)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to get cart")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get cart",
         )

@@ -1,9 +1,9 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CartProduct(BaseModel):
     model_config = ConfigDict(from_attributes= True)
-    
+
     title: str
     description: str | None = None
     price: int
@@ -17,3 +17,7 @@ class CartItemResponse(BaseModel):
     quantity: int
     product: CartProduct
     subtotal: int
+
+
+class CartItemQuantityUpdate(BaseModel):
+    quantity: int = Field(ge=1)

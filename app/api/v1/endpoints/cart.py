@@ -11,6 +11,7 @@ from app.models.cart import Cart
 from app.models.cart_items import CartItem
 from app.models.products import Product
 from app.schemas.cart import CartRequest, CartResponse
+from app.schemas.cart_items import CartItemQuantityUpdate
 from app.utils.helper import _prepare_cart_response
 from app.utils.logger import logger
 
@@ -142,4 +143,119 @@ async def getCart(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get cart",
+        )
+
+
+@router.patch("/{cart_item_id}", response_model=CartResponse)
+async def updated_quantity(
+    cart_item_id: int,
+    payload: CartItemQuantityUpdate,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    try:
+        user_id = current_user.id
+        updatedQuantity = payload.quantity
+
+        result = await db.execute(select(Cart).where(Cart.user_id == user_id))
+        cart = result.scalar_one_or_none()
+
+        if cart is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No cart found for this user",
+            )
+
+        result = await db.execute(
+            select(CartItem).where(
+                CartItem.id == cart_item_id, CartItem.cart_id == cart.id
+            )
+        )
+        cart_item = result.scalar_one_or_none()
+
+        if cart_item is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Cart item not found"
+            )
+
+        result = await db.execute(
+            select(Product).where(Product.id == cart_item.product_id)
+        )
+        product = result.scalar_one_or_none()
+
+        if product is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="No product found"
+            )
+
+        if not product.in_stock or updatedQuantity > product.stock_quantity:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Sorry, we only have {product.stock_quantity} "
+                f"units of this product available.",
+            )
+
+        cart_item.quantity = updatedQuantity
+        result = await db.execute(
+            select(Cart)
+            .where(Cart.id == cart.id)
+            .options(selectinload(Cart.items).selectinload(CartItem.product))
+        )
+
+        cart = result.scalar_one()
+        return _prepare_cart_response(cart)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to update quantity")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update quantity",
+        )
+
+
+@router.delete("/{cart_item_id}", response_model=CartResponse)
+async def remove_cart_item(
+    cart_item_id: int,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        user_id = current_user.id
+
+        result = await db.execute(select(Cart).where(Cart.user_id == user_id))
+        cart = result.scalar_one_or_none()
+
+        if cart is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No cart found for this user"
+            )
+
+        result = await db.execute(select(CartItem).where(CartItem.id == cart_item_id, CartItem.cart_id == cart.id))
+        cart_item = result.scalar_one_or_none()
+
+        if cart_item is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail= "No cart item found"
+            )
+
+        await db.delete(cart_item)
+        await db.flush()
+        result = await db.execute(
+            select(Cart)
+            .where(Cart.id == cart.id)
+            .options(selectinload(Cart.items).selectinload(CartItem.product))
+        )
+
+        cart = result.scalar_one()
+        return _prepare_cart_response(cart)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to remove item from cart")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to remove item from cart",
         )

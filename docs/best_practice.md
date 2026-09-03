@@ -19,3 +19,9 @@
 ✅ Use `docker compose exec web sh` to run project-related commands inside the container.
 
 ---
+
+<!-- FOR NGINX -->
+<!-- check test config first -->
+docker exec nginx-server nginx -t
+<!-- reload the container  -->
+docker exec nginx-server nginx -s reload

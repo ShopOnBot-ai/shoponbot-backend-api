@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -121,20 +122,15 @@ async def getCart(
             .options(selectinload(Cart.items).selectinload(CartItem.product))
         )
         cart = result.scalar_one_or_none()
-
         if cart is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No cart found for this user",
+            current_itme = datetime.now()
+            return CartResponse(
+                id=0,
+                user_id=user_id,
+                items=[],
+                created_at=current_itme,
+                updated_at=current_itme
             )
-
-        logger.info(
-            "Cart data: id=%s, user_id=%s, created_at=%s, updated_at=%s",
-            cart.id,
-            cart.user_id,
-            cart.created_at,
-            cart.updated_at,
-        )
         return _prepare_cart_response(cart)
     except HTTPException:
         raise

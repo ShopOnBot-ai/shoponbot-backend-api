@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,11 +43,6 @@ async def get_all_products(
 
         has_more = offset + len(products) < total_products
         logger.info(has_more, "hasmore")
-
-        if not products:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="No products found."
-            )
 
         response_products = []
 

@@ -40,7 +40,4 @@ async def onboarding(
     current_user.full_name = full_name
     current_user.onboarding_status = True
 
-    await db.commit()
-    await db.refresh(current_user)
-
     return {"message": "Onboarding completed successfully"}

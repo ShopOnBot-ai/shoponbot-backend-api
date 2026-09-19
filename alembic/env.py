@@ -40,7 +40,7 @@ target_metadata = Base.metadata
 
 
 def include_object(object, name, type_, reflected, compare_to):
-    ignored_tables = ["orders", "order_items", "order_service_alembic_version"]
+    ignored_tables = ["orders", "order_items", "order_service_alembic_version", "event_outbox"]
     
     if type_ == "table" and name in ignored_tables:
         return False

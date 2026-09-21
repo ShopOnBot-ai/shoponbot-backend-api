@@ -120,14 +120,13 @@ async def refresh_token(
 
     # get user_id from token as sub
     user_id = verify_token(token=refresh_cookie, expected_type="refresh")
-
-    if user_id is None:
+    if user_id.get("user_id") is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
         )
 
     try:
-        user_id_int = int(user_id)
+        user_id_int = int(user_id.get("user_id"))
     except (TypeError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

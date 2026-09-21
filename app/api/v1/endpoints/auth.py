@@ -86,10 +86,10 @@ async def verify_otp(
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     refresh_token_expires = timedelta(days=settings.refresh_token_expire_days)
     access_token = create_access_token(
-        data={"sub": str(user.id)}, expires_delta=access_token_expires
+        data={"sub": str(user.id), "role": user.role}, expires_delta=access_token_expires
     )
     refresh_token = create_refresh_token(
-        data={"sub": str(user.id)}, expires_delta=refresh_token_expires
+        data={"sub": str(user.id), "role": user.role}, expires_delta=refresh_token_expires
     )
     set_auth_cookie(
         response=response,
@@ -152,7 +152,7 @@ async def refresh_token(
     # Regenrate the access token based on the refresh token because access token expires in 30 minutes and users will not need to login  again and again after every 30 minutes 
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": str(user.id)}, expires_delta=access_token_expires
+        data={"sub": str(user.id), "role": user.role}, expires_delta=access_token_expires
     )
     set_auth_cookie(
         response=response,

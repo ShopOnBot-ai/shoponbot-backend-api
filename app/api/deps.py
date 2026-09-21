@@ -20,15 +20,15 @@ async def get_current_user(
             detail="Not authenticated",
         )
     
-    user_id = verify_token(token=token, expected_type="access")
-    if user_id is None:
+    user_claims = verify_token(token=token, expected_type="access")
+    if user_claims is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
         )
 
     try:
-        user_id_int = int(user_id)
+        user_id_int = int(user_claims.get("user_id"))
     except (TypeError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

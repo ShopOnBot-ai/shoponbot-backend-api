@@ -44,7 +44,7 @@ def create_refresh_token(data: dict, expires_delta: timedelta | None = None) -> 
 
 # JWT has a 3 parts (Header: { "alg":"HS256", "typ":"JWT" }, payload: { "sub":"15", "iat":..., "exp":... }, signature: MACSHA256( Header + payload + secret key))
 
-def verify_token(token: str, expected_type: str) -> str | None:
+def verify_token(token: str, expected_type: str) -> dict | None:
     """Verify a JWT access token and return the subject (user id) if valid."""
     try:
         payload = jwt.decode(
@@ -58,4 +58,7 @@ def verify_token(token: str, expected_type: str) -> str | None:
     else:
         if payload.get("type") != expected_type:
             return None
-        return payload.get("sub")
+        return {
+            "user_id": int(payload.get("sub")),
+            "role": payload.get("role")
+        }

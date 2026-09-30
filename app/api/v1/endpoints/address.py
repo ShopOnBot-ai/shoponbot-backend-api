@@ -77,13 +77,44 @@ async def create_addresses(
 
 
 @router.get("/{address_id}", response_model=AddressesResponse)
-async def get_all_addresses(
+async def get_address(
     address_id: int, current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_db)]
 ):
     try:
         user_id = current_user.id
 
         results = await db.execute(select(Address).where(Address.user_id == user_id, Address.id == address_id))
+        addresses = results.scalars().all()
+        logger.info("addresses: %s", addresses)
+
+        if addresses is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No Addresses found for this user, please create atleast one address first",
+            )
+
+        response = AddressesResponse(
+            message="Addresses fetched successfully",
+            user_id=user_id,
+            addresses=addresses,
+        )
+        return response
+    except Exception as e:
+        logger.exception("Failed to fetch addresses: %s", str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch addresses",
+        )
+
+
+@router.get("/", response_model=AddressesResponse)
+async def get_all_addresses(
+  current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        user_id = current_user.id
+
+        results = await db.execute(select(Address).where(Address.user_id == user_id))
         addresses = results.scalars().all()
         logger.info("addresses: %s", addresses)
 

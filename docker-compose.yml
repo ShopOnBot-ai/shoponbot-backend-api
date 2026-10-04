@@ -78,7 +78,7 @@ services:
     build: .
     container_name: email_worker
     command: >
-      uv run python -m app.workers.email_worker
+      python -m app.workers.email_worker
     volumes:
       - .:/app
       - /app/.venv

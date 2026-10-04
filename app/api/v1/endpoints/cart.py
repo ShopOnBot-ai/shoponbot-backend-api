@@ -255,3 +255,31 @@ async def remove_cart_item(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to remove item from cart",
         )
+
+
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+async def clear_user_cart(
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)]
+):
+    try:
+        user_id = current_user.id
+
+        result = await db.execute(select(Cart).where(Cart.user_id == user_id))
+        cart = result.scalar_one_or_none()
+
+        if cart is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No cart found for this user"
+            )
+
+        await db.delete(cart)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to delete user cart")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete user cart",
+        )

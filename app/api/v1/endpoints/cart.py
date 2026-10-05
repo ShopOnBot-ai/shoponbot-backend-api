@@ -257,23 +257,20 @@ async def remove_cart_item(
         )
 
 
-@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/internal/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def clear_user_cart(
-    current_user: CurrentUser,
+    user_id: int,
     db: Annotated[AsyncSession, Depends(get_db)]
 ):
     try:
-        user_id = current_user.id
 
         result = await db.execute(select(Cart).where(Cart.user_id == user_id))
         cart = result.scalar_one_or_none()
 
         if cart is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No cart found for this user"
-            )
-
+            logger.info("No cart entity found for this user_id: %s", user_id)
+            return
+        
         await db.delete(cart)
     except HTTPException:
         raise

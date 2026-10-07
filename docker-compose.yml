@@ -55,6 +55,16 @@ services:
     networks:
       - shoponbot_shared_net
 
+  quadrant_db:
+    image: qdrant/qdrant:v1.8.0
+    container_name: qdrant-fastapi
+    ports: 
+      - "6333:6333"
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+    networks:
+      - shoponbot_shared_net
+
   # RabbitMQ service
   rabbitmq:
     image: rabbitmq:3-management

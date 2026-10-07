@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import build_admin_product_cache_key, redis_client
 from app.db.database import get_db
+from app.models.event_outbox import EventOutbox, EventStatus
 from app.models.products import Product
 from app.models.user import User
 from app.schemas.products import (
@@ -168,7 +169,7 @@ async def create_product(
     payload: AdminProductCreateRequest, db: Annotated[AsyncSession, Depends(get_db)]
 ):
     try:
-        product = Product(
+        new_product = Product(
             title=payload.title,
             description=payload.description,
             image_url=payload.image_url,
@@ -176,11 +177,29 @@ async def create_product(
             in_stock=payload.in_stock,
             stock_quantity=payload.stock_quantity,
         )
-        db.add(product)
+        db.add(new_product)
         await db.flush()
-        await db.refresh(product)
+
+        new_event = EventOutbox(
+            aggregate_type="Product",
+            aggregate_id=str(new_product.id),
+            event_type="ProductCreated",
+            publish_status=EventStatus.PENDING,
+            payload={
+                "product_id": new_product.id,
+                "title": new_product.title,
+                "description": new_product.description,
+                "price": str(new_product.price),
+                "in_stock": str(new_product.in_stock),
+                "stock_quantity": str(new_product.stock_quantity),
+                "status": "active"
+            },
+        )
+        db.add(new_event)
+        await db.flush()
+        await db.refresh(new_product)
         response = AdminProductCreateResponse(
-            message="Product created successfully", product=product
+            message="Product created successfully", product=new_product
         )
         return response
     except Exception:

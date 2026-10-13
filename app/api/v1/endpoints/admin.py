@@ -231,6 +231,24 @@ async def update_product(
         product.stock_quantity = payload.stock_quantity
 
         await db.flush()
+
+        new_event = EventOutbox(
+            aggregate_type="Product",
+            aggregate_id=str(product.id),
+            event_type="ProductUpdated",
+            publish_status=EventStatus.PENDING,
+            payload={
+                "product_id": product.id,
+                "title": product.title,
+                "description": product.description,
+                "price": str(product.price),
+                "in_stock": str(product.in_stock),
+                "stock_quantity": str(product.stock_quantity),
+                "status": "updated"
+            },
+        )
+        db.add(new_event)
+        await db.flush()
         await db.refresh(product)
         response = AdminProductUpdateResponse(
             message="Product updated successfully", product=product
@@ -258,6 +276,18 @@ async def delete_product(
 
         object_key = product.image_url
 
+        new_event = EventOutbox(
+            aggregate_type="Product",
+            aggregate_id=str(product.id),
+            event_type="ProductDeleted",
+            publish_status=EventStatus.PENDING,
+            payload={
+                "product_id": product.id,
+                "status": "deleted"
+            },
+        )
+        db.add(new_event)
+        await db.flush()
         await db.delete(product)
 
         if object_key:

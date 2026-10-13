@@ -123,6 +123,16 @@ services:
     networks:
       - shoponbot_shared_net
 
+  ollama_node:
+    image: ollama/ollama:latest
+    container_name: ollama-fastapi
+    ports:
+      - "11434:11434"
+    volumes:
+      - ~/.ollama:/root/.ollama
+    networks:
+      - shoponbot_shared_net
+
 volumes:
   postgres_data:
 
